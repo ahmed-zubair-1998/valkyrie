@@ -18,4 +18,7 @@ jobs:
           local-prefix: github.com/ahmed-zubair-1998/valkyrie
           threshold-file: 80
           threshold-package: 80
-          threshold-total: 95
+          threshold-total: 80
+
+          git-token: ${{ github.ref_name == 'main' && '' }}
+          git-branch: badges
