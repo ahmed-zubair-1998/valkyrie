@@ -1,6 +1,9 @@
 package main
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestRun(t *testing.T) {
 	t.Run("should register client to topic", func(t *testing.T) {
@@ -10,7 +13,6 @@ func TestRun(t *testing.T) {
 			broadcast:  make(chan []byte),
 			register:   make(chan *Client),
 			unregister: make(chan *Client),
-			stop:       make(chan bool),
 		}
 		go topic.Run()
 
@@ -31,23 +33,24 @@ func TestRun(t *testing.T) {
 			broadcast:  make(chan []byte),
 			register:   make(chan *Client),
 			unregister: make(chan *Client),
-			stop:       make(chan bool),
+		}
+
+		for range 10 {
+			client := &Client{
+				topic: topic,
+				send:  make(chan []byte),
+			}
+			topic.clients[client] = true
 		}
 		go topic.Run()
-
-		client1 := &Client{
-			topic: topic,
-			send:  make(chan []byte),
-		}
-		topic.register <- client1
 
 		topic.broadcast <- []byte("test message")
 
 		go func() {
-			for {
+			for client := range topic.clients {
 				select {
-				case <-client1.send:
-				default:
+				case <-client.send:
+				case <-time.After(time.Second * 5):
 					t.Errorf("message not broadcasted")
 				}
 			}

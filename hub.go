@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/gorilla/websocket"
 )
 
 type Hub struct {
@@ -60,7 +62,9 @@ func (hub *Hub) SubscribeToTopic(w http.ResponseWriter, r *http.Request) {
 	}
 	topic.register <- client
 	go client.ListenToEvents()
-	fmt.Fprint(w, "Successfully subscribed to topic id:", topicId)
+
+	successMsg := "Successfully subscribed to topic id: " + strconv.Itoa(topicId)
+	conn.WriteMessage(websocket.TextMessage, []byte(successMsg))
 }
 
 type BroadcastEventData struct {
@@ -77,11 +81,11 @@ func (hub *Hub) BroadcastEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	event, ok := hub.topics[data.Id]
+	topic, ok := hub.topics[data.Id]
 	if !ok {
-		fmt.Fprint(w, "Incorrect event id")
+		fmt.Fprint(w, "Incorrect topic id")
 		return
 	}
 
-	event.broadcast <- []byte(strconv.Itoa(data.Id) + ":" + data.Message)
+	topic.broadcast <- []byte(strconv.Itoa(data.Id) + ":" + data.Message)
 }

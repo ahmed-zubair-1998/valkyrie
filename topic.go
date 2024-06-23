@@ -6,7 +6,6 @@ type Topic struct {
 	broadcast  chan []byte
 	register   chan *Client
 	unregister chan *Client
-	stop       chan bool
 }
 
 func (topic *Topic) Run() {
@@ -16,15 +15,8 @@ func (topic *Topic) Run() {
 			topic.clients[client] = true
 		case message := <-topic.broadcast:
 			for client := range topic.clients {
-				select {
-				case client.send <- message:
-				default:
-					close(client.send)
-					delete(topic.clients, client)
-				}
+				client.send <- message
 			}
-		case <-topic.stop:
-			break
 		}
 	}
 }
