@@ -16,8 +16,9 @@ class WebsocketClient(User):
         self.connection = False
 
     def connect(self):
+        ws_host = self.host.replace('http', 'ws')
         self.ws = websocket.WebSocketApp(
-            'ws://localhost:8080/topics/subscribe?topicId=1',
+            f'{ws_host}/topics/subscribe?topicId=1',
             on_message=self.on_message,
             on_error=self.on_error,
             on_close=self.on_close
@@ -31,23 +32,24 @@ class WebsocketClient(User):
             self.connection = True
     
     def on_message(self, ws, message):
-        broadcast_time = float(message.split(':')[1])
-        time_diff = get_current_unix_timestamp() - broadcast_time
-        self.environment.events.request.fire(
-            request_type="WSR",
-            name="EVENT",
-            response_time=time_diff,
-            response_length=len(message),
-            exception=None,
-            context=self.context(),
-        )
+        if 'Successfully subscribed to topic id' not in message:
+            broadcast_time = float(message.split(':')[1])
+            time_diff = get_current_unix_timestamp() - broadcast_time
+            self.environment.events.request.fire(
+                request_type="Success",
+                name="EVENT",
+                response_time=time_diff,
+                response_length=len(message),
+                exception=None,
+                context=self.context(),
+            )
     
     def on_error(self, ws, error):
         if type(error) != websocket.WebSocketConnectionClosedException:
             print("Error:", error)
             if str(error) != "Connection to remote host was lost":
                 self.environment.events.request.fire(
-                    request_type="WSR",
+                    request_type="Error",
                     name="EVENT",
                     response_time=0,
                     response_length=0,
@@ -58,7 +60,7 @@ class WebsocketClient(User):
     def on_close(self, ws, close_status_code, close_msg):
         print("Closed:", close_status_code, close_msg)
         self.environment.events.request.fire(
-            request_type="WSR",
+            request_type="Close",
             name="EVENT",
             response_time=0,
             response_length=0,
