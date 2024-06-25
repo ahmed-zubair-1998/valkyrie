@@ -48,7 +48,6 @@ func (hub *Hub) SubscribeToTopic(w http.ResponseWriter, r *http.Request) {
 	conn, err := WebsocketUpgrader.Upgrade(w, r, nil)
 	if err != nil {
 		fmt.Fprint(w, "Websocket upgrade failed")
-		conn.Close()
 		return
 	}
 

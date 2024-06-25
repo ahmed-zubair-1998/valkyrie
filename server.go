@@ -12,7 +12,7 @@ type HubInterface interface {
 	BroadcastEvent(w http.ResponseWriter, r *http.Request)
 }
 
-type WebsocketInterface interface {
+type WebsocketConnectionInterface interface {
 	WriteMessage(messageType int, data []byte) error
 }
 

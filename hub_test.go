@@ -79,8 +79,8 @@ func TestBroadcastEvent(t *testing.T) {
 	t.Run("should not broadcast if topic is not yet created", func(t *testing.T) {
 		hub := NewHub()
 		data := struct {
-			id  int    `json:"id"`
-			msg string `json:"msg"`
+			Id      int    `json:"id"`
+			Message string `json:"msg"`
 		}{
 			1,
 			"hello",
