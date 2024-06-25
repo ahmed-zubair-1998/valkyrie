@@ -7,22 +7,6 @@ import (
 	"testing"
 )
 
-func TestPingRoute(t *testing.T) {
-	t.Run("should return heartbeat", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodGet, "/ping", nil)
-		response := httptest.NewRecorder()
-
-		Heartbeat(response, request)
-
-		got := response.Body.String()
-		want := "heartbeat"
-
-		if got != want {
-			t.Errorf("got %q, wanted %q", got, want)
-		}
-	})
-}
-
 type MockHub struct {
 	topics map[int]*Topic
 }
@@ -33,37 +17,38 @@ func NewMockHub() *MockHub {
 	}
 }
 
-func (hub *MockHub) MockSubscribeToTopic(w http.ResponseWriter, r *http.Request) {
+func (hub *MockHub) SubscribeToTopic(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Received request on ", r.URL)
 }
 
-func (hub *MockHub) MockBroadcastEvent(w http.ResponseWriter, r *http.Request) {
+func (hub *MockHub) BroadcastEvent(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Received request on ", r.URL)
 }
 
-func TestHubRoutes(t *testing.T) {
+func TestSetupRoutes(t *testing.T) {
 	hub := NewMockHub()
+	mux := SetupRoutes(hub)
 	tests := []struct {
-		name        string
-		url         string
-		handlerFunc http.HandlerFunc
+		name string
+		url  string
+		want string
 	}{
-		{"should handle topic subscription", "/topics/subscribe?topicId=1", hub.MockSubscribeToTopic},
-		{"should handle event broadcast", "/events/broadcast", hub.MockBroadcastEvent},
+		{"should return heartbeat", "/heartbeat", "heartbeat"},
+		{"should handle topic subscription", "/topics/subscribe?topicId=1", "Received request on /topics/subscribe?topicId=1"},
+		{"should handle event broadcast", "/events/broadcast", "Received request on /events/broadcast"},
 	}
 
 	for _, test := range tests {
-		t.Run("should handle event broadcast", func(t *testing.T) {
+		t.Run(test.name, func(t *testing.T) {
 			request, _ := http.NewRequest(http.MethodGet, test.url, nil)
 			response := httptest.NewRecorder()
 
-			test.handlerFunc(response, request)
+			mux.ServeHTTP(response, request)
 
 			got := response.Body.String()
-			want := "Received request on " + test.url
 
-			if got != want {
-				t.Errorf("got %q, wanted %q", got, want)
+			if got != test.want {
+				t.Errorf("got %q, wanted %q", got, test.want)
 			}
 		})
 	}

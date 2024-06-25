@@ -6,7 +6,7 @@ import (
 
 type Client struct {
 	topic *Topic
-	conn  *websocket.Conn
+	conn  WebsocketInterface
 	send  chan []byte
 }
 
