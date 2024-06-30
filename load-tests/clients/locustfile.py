@@ -32,12 +32,21 @@ class WebsocketClient(User):
             self.connection = True
     
     def on_message(self, ws, message):
-        if 'Successfully subscribed to topic id' not in message:
+        if 'Successfully subscribed to topic id' in message:
+            self.environment.events.request.fire(
+                request_type="WSR",
+                name="Connected",
+                response_time=0,
+                response_length=len(message),
+                exception=None,
+                context=self.context(),
+            )
+        else:
             broadcast_time = float(message.split(':')[1])
             time_diff = get_current_unix_timestamp() - broadcast_time
             self.environment.events.request.fire(
-                request_type="Success",
-                name="EVENT",
+                request_type="WSR",
+                name="Event Received",
                 response_time=time_diff,
                 response_length=len(message),
                 exception=None,
@@ -49,8 +58,8 @@ class WebsocketClient(User):
             print("Error:", error)
             if str(error) != "Connection to remote host was lost":
                 self.environment.events.request.fire(
-                    request_type="Error",
-                    name="EVENT",
+                    request_type="WSR",
+                    name="Error",
                     response_time=0,
                     response_length=0,
                     exception=Exception("Websocket Exception"),
@@ -60,8 +69,8 @@ class WebsocketClient(User):
     def on_close(self, ws, close_status_code, close_msg):
         print("Closed:", close_status_code, close_msg)
         self.environment.events.request.fire(
-            request_type="Close",
-            name="EVENT",
+            request_type="WSR",
+            name="Closed Connection",
             response_time=0,
             response_length=0,
             exception=Exception("Websocket Closed"),
