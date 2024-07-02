@@ -1,3 +1,4 @@
+import threading
 import time
 
 import websocket
@@ -23,7 +24,9 @@ class WebsocketClient(User):
             on_error=self.on_error,
             on_close=self.on_close
         )
-        self.ws.run_forever() 
+        wst = threading.Thread(target=lambda: self.ws.run_forever())
+        wst.daemon = True
+        wst.start()
 
     @task
     def create_client(self):
