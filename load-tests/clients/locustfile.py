@@ -10,7 +10,7 @@ def get_current_unix_timestamp():
 
 
 class WebsocketClient(User):
-    wait_time = between(0.2, 2)
+    wait_time = between(10, 20)
 
     def on_start(self):
         self.connection = False
