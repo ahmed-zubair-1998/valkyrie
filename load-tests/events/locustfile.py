@@ -5,7 +5,8 @@ from locust import HttpUser, task, constant
 
 def get_current_unix_timestamp():
     """Returns the current Unix timestamp in milliseconds."""
-    return time.time() * 1000
+    ms = str(time.time() * 1000)
+    return ms.split('.')[0]
 
 
 class EventGenerator(HttpUser):
@@ -13,4 +14,4 @@ class EventGenerator(HttpUser):
 
     @task
     def send_http_requests(self):
-        self.client.post('/events/broadcast', json={"id": 1, "msg": str(get_current_unix_timestamp())})
+        self.client.post('/events/broadcast', json={"id": 1, "msg": get_current_unix_timestamp()})
