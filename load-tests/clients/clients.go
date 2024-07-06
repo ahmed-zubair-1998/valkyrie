@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"math/rand"
 	"net/url"
 	"os"
 	"os/signal"
@@ -17,6 +18,11 @@ import (
 var bindHost string
 var bindPort string
 var stopChannel chan bool
+
+func getRandomNumber(min int, max int) int {
+	r := rand.Intn(max-min) + min
+	return r
+}
 
 func receiveMessages(c *websocket.Conn, done chan struct{}) {
 	defer close(done)
@@ -42,25 +48,7 @@ func receiveMessages(c *websocket.Conn, done chan struct{}) {
 	}
 }
 
-func worker() {
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt)
-
-	u := url.URL{Scheme: "ws", Host: bindHost + ":" + bindPort, Path: "/topics/subscribe"}
-	params := u.Query()
-	params.Add("topicId", "1")
-	u.RawQuery = params.Encode()
-
-	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
-	if err != nil {
-		boomer.RecordFailure("WSR", "Connection Failed", 0, err.Error())
-		return
-	}
-	defer c.Close()
-
-	done := make(chan struct{})
-	go receiveMessages(c, done)
-
+func listenToInterrupts(c *websocket.Conn, done chan struct{}, interrupt chan os.Signal) {
 	for {
 		select {
 		case <-done:
@@ -82,6 +70,29 @@ func worker() {
 			return
 		}
 	}
+}
+
+func worker() {
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt)
+
+	u := url.URL{Scheme: "ws", Host: bindHost + ":" + bindPort, Path: "/topics/subscribe"}
+	params := u.Query()
+	params.Add("topicId", "1")
+	u.RawQuery = params.Encode()
+
+	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	if err != nil {
+		boomer.RecordFailure("WSR", "Connection Failed", 0, err.Error())
+		r := getRandomNumber(5, 10)
+		time.Sleep(time.Duration(r) * time.Second)
+		return
+	}
+	defer c.Close()
+
+	done := make(chan struct{})
+	go receiveMessages(c, done)
+	listenToInterrupts(c, done, interrupt)
 }
 
 func main() {
