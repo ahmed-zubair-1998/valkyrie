@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -8,6 +9,8 @@ import (
 
 	"github.com/gorilla/websocket"
 )
+
+var dispatcherAddress string
 
 type HubInterface interface {
 	SubscribeToTopic(w http.ResponseWriter, r *http.Request)
@@ -38,10 +41,15 @@ func SetupConnectionToDispatcher(serverAddress string) (*websocket.Conn, error) 
 }
 
 func main() {
-	conn, err := SetupConnectionToDispatcher("http://localhost:8090")
+	flag.Parse()
+	conn, err := SetupConnectionToDispatcher(dispatcherAddress)
 	if err != nil {
 		log.Fatal("Unable to connect to dispatcher", err)
 	}
 	mux := SetupRoutes(NewHub(conn))
 	http.ListenAndServe(":8080", mux)
+}
+
+func init() {
+	flag.StringVar(&dispatcherAddress, "dispatcher", "http://localhost:8090", "dispatcher")
 }
