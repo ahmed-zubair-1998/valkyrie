@@ -5,19 +5,21 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/gorilla/websocket"
 )
 
 type MockHub struct {
-	topics map[int]*Topic
+	servers map[*websocket.Conn]*FrontendServer
 }
 
 func NewMockHub() *MockHub {
 	return &MockHub{
-		topics: make(map[int]*Topic),
+		servers: make(map[*websocket.Conn]*FrontendServer),
 	}
 }
 
-func (hub *MockHub) SubscribeToTopic(w http.ResponseWriter, r *http.Request) {
+func (hub *MockHub) FrontendServerConnection(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Received request on ", r.URL)
 }
 
@@ -34,7 +36,7 @@ func TestSetupRoutes(t *testing.T) {
 		want string
 	}{
 		{"should return heartbeat", "/heartbeat", "heartbeat"},
-		{"should handle topic subscription", "/topics/subscribe?topicId=1", "Received request on /topics/subscribe?topicId=1"},
+		{"should handle topic subscription", "/frontend/connect", "Received request on /frontend/connect"},
 		{"should handle event broadcast", "/events/broadcast", "Received request on /events/broadcast"},
 	}
 

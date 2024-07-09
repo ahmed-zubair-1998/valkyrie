@@ -14,4 +14,4 @@ class EventGenerator(HttpUser):
 
     @task
     def send_http_requests(self):
-        self.client.post('/events/broadcast', json={"id": 1, "msg": get_current_unix_timestamp()})
+        self.client.post('/events/broadcast', json={"topic_id": 1, "message": get_current_unix_timestamp()})
