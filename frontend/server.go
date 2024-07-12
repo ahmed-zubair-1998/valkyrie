@@ -46,8 +46,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Unable to connect to dispatcher", err)
 	}
-	mux := SetupRoutes(NewHub(conn))
-	http.ListenAndServe(":8080", mux)
+	http.ListenAndServe(":8080", SetupRoutes(NewHub(conn)))
 }
 
 func init() {

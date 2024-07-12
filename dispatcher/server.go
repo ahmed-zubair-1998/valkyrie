@@ -10,6 +10,11 @@ type HubInterface interface {
 	BroadcastEvent(w http.ResponseWriter, r *http.Request)
 }
 
+type WebsocketConnectionInterface interface {
+	WriteMessage(messageType int, data []byte) error
+	ReadMessage() (messageType int, p []byte, err error)
+}
+
 func Heartbeat(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "heartbeat")
 }
@@ -25,7 +30,6 @@ func SetupRoutes(hub HubInterface) *http.ServeMux {
 }
 
 func main() {
-	hub := NewHub()
-	mux := SetupRoutes(hub)
+	mux := SetupRoutes(NewHub())
 	http.ListenAndServe(":8090", mux)
 }

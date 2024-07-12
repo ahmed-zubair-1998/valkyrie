@@ -30,7 +30,6 @@ func (ws *MockWebsocketClient) ReadMessage() (messageType int, p []byte, err err
 	default:
 		return websocket.TextMessage, []byte(msg), nil
 	}
-
 }
 
 func TestListenToEvents(t *testing.T) {

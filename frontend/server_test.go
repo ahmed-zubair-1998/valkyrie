@@ -53,9 +53,9 @@ func TestSetupRoutes(t *testing.T) {
 
 func TestSetupConnectionToDispatcher(t *testing.T) {
 	t.Run("should return error if connection not successful", func(t *testing.T) {
-		_, err := SetupConnectionToDispatcher("http://localhost:8080")
+		_, err := SetupConnectionToDispatcher("http://127.0.0.1:8080")
 		got := err.Error()
-		want := "dial tcp [::1]:8080: connect: connection refused"
+		want := "dial tcp 127.0.0.1:8080: connect: connection refused"
 
 		if got != want {
 			t.Errorf("got %q, wanted %q", got, want)

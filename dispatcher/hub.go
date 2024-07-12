@@ -9,7 +9,7 @@ import (
 )
 
 type Hub struct {
-	servers map[*websocket.Conn]*FrontendServer
+	servers map[WebsocketConnectionInterface]*FrontendServer
 }
 
 type BroadcastEventData struct {
@@ -19,11 +19,11 @@ type BroadcastEventData struct {
 
 func NewHub() *Hub {
 	return &Hub{
-		servers: make(map[*websocket.Conn]*FrontendServer),
+		servers: make(map[WebsocketConnectionInterface]*FrontendServer),
 	}
 }
 
-func (hub *Hub) GetOrCreateServer(conn *websocket.Conn) *FrontendServer {
+func (hub *Hub) GetOrCreateServer(conn WebsocketConnectionInterface) *FrontendServer {
 	server, isPresent := hub.servers[conn]
 	if isPresent {
 		return server
@@ -32,7 +32,7 @@ func (hub *Hub) GetOrCreateServer(conn *websocket.Conn) *FrontendServer {
 	newServer := &FrontendServer{
 		conn:      conn,
 		topics:    make(map[int]bool),
-		broadcast: make(chan BroadcastEventData),
+		broadcast: make(chan *BroadcastEventData),
 	}
 	hub.servers[conn] = newServer
 	go newServer.BroadcastEvents()
@@ -67,7 +67,7 @@ func (hub *Hub) BroadcastEvent(w http.ResponseWriter, r *http.Request) {
 	for _, server := range hub.servers {
 		_, found := server.topics[data.TopicId]
 		if found {
-			server.broadcast <- data
+			server.broadcast <- &data
 			isValidTopic = true
 		}
 	}

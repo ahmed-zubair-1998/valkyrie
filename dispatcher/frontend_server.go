@@ -9,8 +9,8 @@ import (
 
 type FrontendServer struct {
 	topics    map[int]bool
-	conn      *websocket.Conn
-	broadcast chan BroadcastEventData
+	conn      WebsocketConnectionInterface
+	broadcast chan *BroadcastEventData
 }
 
 type SubscribeTopicData struct {
@@ -23,24 +23,20 @@ func (server *FrontendServer) BroadcastEvents() {
 	}
 }
 
-func (server *FrontendServer) SendRequest(data BroadcastEventData) {
-	jsonData, err := json.Marshal(data)
+func (server *FrontendServer) SendRequest(data *BroadcastEventData) error {
+	jsonData, _ := json.Marshal(data)
+	err := server.conn.WriteMessage(websocket.TextMessage, jsonData)
 	if err != nil {
-		log.Println("Error before dispatching event", err.Error())
-		return
+		log.Println("Error while dispatching event", err)
+		return err
 	}
-
-	err = server.conn.WriteMessage(websocket.TextMessage, jsonData)
-	if err != nil {
-		log.Println("Error while dispatching event", err.Error())
-		return
-	}
+	return nil
 }
 
 func (server *FrontendServer) SubscribeToTopics() {
 	for {
 		_, message, err := server.conn.ReadMessage()
-		if websocket.IsCloseError(err) {
+		if websocket.IsUnexpectedCloseError(err) {
 			log.Println("Websocket connection closed by FE server", err)
 			return
 		}
