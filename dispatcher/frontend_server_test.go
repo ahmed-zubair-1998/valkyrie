@@ -89,7 +89,7 @@ func TestSendRequest(t *testing.T) {
 			t.Errorf("should have returned error")
 		}
 	})
-	t.Run("should not return error if message is succesfully sent to FE server", func(t *testing.T) {
+	t.Run("should not return error if message is successfully sent to FE server", func(t *testing.T) {
 		data := &BroadcastEventData{
 			TopicId: 1,
 			Message: "Hello",
